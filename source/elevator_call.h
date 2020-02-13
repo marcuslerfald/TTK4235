@@ -32,7 +32,7 @@ void add_request(int floor, bool direction_up, int current_floor, bool current_d
  * @brief Removes an order for floor @p floor with direction @p direction_up 
  * in @p elevator_queue.
  *
- * @param floor Floor we want to remove order from.
+ * @param floor Floor we want to remove order from. 
  * @param direction_up Tell the queue system wether we are going up or down.
  */
 void remove_request(int floor, bool direction_up);

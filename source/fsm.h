@@ -59,7 +59,7 @@ void fsm_run();
  * 
  * @param event 
  */
-void fsm_dispatch(elevator_event_t event);
+void fsm_dispatch(fsm_event_t event);
 
 
 #endif __FSM_H__

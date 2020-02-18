@@ -21,7 +21,7 @@ typedef void (*state_function)(fsm_event_t event);
 
 struct fsm_t {
     state_function state;
-    int current_floor;
+    fsm_state_t current_floor;
 };
 
 // FSM functions
@@ -180,7 +180,7 @@ static void state_emergency_stop_floor(fsm_event_t event)
     switch(event)
     {
         case EVENT_ENTRY:
-
+            hardware_command_door_open(true);
         break;
 
         case EVENT_EXIT:

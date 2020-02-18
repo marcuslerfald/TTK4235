@@ -11,34 +11,41 @@
  * 
  */
 
-#ifndef __FSM_H__
-#define __FSM_H__
+#ifndef FSM_H
+#define FSM_H
+
+#define FOREACH_STATE(STATE)                \
+        STATE(STATE_INIT)                   \
+        STATE(STATE_UNKNOWN_FLOOR)          \
+        STATE(STATE_IDLE)                   \
+        STATE(STATE_MOVING)                 \
+        STATE(STATE_DOOR_OPEN)              \
+        STATE(STATE_EMERGENCY_STOP)         \
+        STATE(STATE_EMERGENCY_STOP_FLOOR)   \
+        STATE(STATE_EMERGENCY_STOP_NOWHERE)
+
+#define FOREACH_EVENT(EVENT)                \
+        EVENT(EVENT_HW_INIT_DONE)           \
+        EVENT(EVENT_FOUND_FLOOR)            \
+        EVENT(EVENT_STOP_BUTTON_PRESSED)    \
+        EVENT(EVENT_STOP_BUTTON_RELEASED)   \
+        EVENT(EVENT_TIMER_TIMEOUT)          \
+        EVENT(EVENT_OBSTRUCTION_ACTIVE)     \
+        EVENT(EVENT_REACHED_FLOOR_IN_QUEUE) \
+        EVENT(EVENT_ENTRY)                  \
+        EVENT(EVENT_EXIT)
+
+#define GENERATE_ENUM(ENUM) ENUM,
+#define GENERATE_STRING(STRING) #STRING,
 
 typedef enum
 {
-    EVENT_HW_INIT_DONE,
-    EVENT_FOUND_FLOOR,
-    EVENT_STOP_BUTTON_PRESSED,
-    EVENT_STOP_BUTTON_RELEASED,
-    EVENT_TIMER_TIMEOUT,
-    EVENT_OBSTRUCTION_ACTIVE,
-    EVENT_REACHED_FLOOR_IN_QUEUE,
-
-    // Not to used outside .c file
-    EVENT_ENTRY = 0xFE,
-    EVENT_EXIT = 0xFF
+    FOREACH_EVENT(GENERATE_ENUM)
 } fsm_event_t;
 
 typedef enum
 {
-    STATE_INIT,
-    STATE_UNKNOWN_FLOOR,
-    STATE_IDLE,
-    STATE_MOVING,
-    STATE_DOOR_OPEN,
-    STATE_EMERGENCY_STOP,
-    STATE_EMERGENCY_STOP_FLOOR,
-    STATE_EMERGENCY_STOP_NOWHERE
+    FOREACH_STATE(GENERATE_ENUM)
 } fsm_state_t;
 
 
@@ -61,5 +68,12 @@ void fsm_run();
  */
 void fsm_dispatch(fsm_event_t event);
 
+/**
+ * @brief Returns current state of state machine
+ * 
+ * @return fsm_state_t 
+ */
+fsm_state_t fsm_get_state();
 
-#endif __FSM_H__
+
+#endif // FSM_H

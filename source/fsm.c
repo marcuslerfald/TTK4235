@@ -12,9 +12,13 @@
  */
 
 #include "fsm.h"
-#include "hardware.h"
+
 #include <stdbool.h>
 #include <stdio.h>
+
+#include "hardware.h"
+
+#include "utility.h"
 
 
 // Strings for both events and states, for debugging purposes
@@ -26,6 +30,7 @@ static const char *STATE_STRING[] = {
     FOREACH_STATE(GENERATE_STRING)
 };
 
+// Typedefs
 typedef struct fsm_t fsm_t;
 
 typedef void (*state_function)(fsm_event_t event);
@@ -33,6 +38,8 @@ typedef void (*state_function)(fsm_event_t event);
 struct fsm_t {
     state_function state;
     fsm_state_t state_name;
+    int current_floor;
+    fsm_direction_t direction;
 };
 
 // FSM functions
@@ -48,18 +55,13 @@ static void state_emergency_stop        (fsm_event_t event);
 static void state_emergency_stop_nowhere(fsm_event_t event);
 static void state_emergency_stop_floor  (fsm_event_t event);
 
+// FSM Instance
 static fsm_t fsm;
 
 // 
-
 void fsm_init()
 {
     fsm.state = &state_init;
-}
-
-void fsm_run()
-{
-
 }
 
 void fsm_dispatch(fsm_event_t event)
@@ -74,7 +76,6 @@ fsm_state_t fsm_get_state()
 }
 
 // FSM functions
-
 static void fsm_transition(state_function new_state)
 {
     fsm_dispatch(EVENT_EXIT);
@@ -87,7 +88,6 @@ static void fsm_transition(state_function new_state)
 }
 
 // State Functions
-
 static void state_init(fsm_event_t event)
 {
     switch(event)
@@ -114,9 +114,16 @@ static void state_unknown_floor(fsm_event_t event)
     {
         case EVENT_ENTRY:
             fsm.state_name = STATE_UNKNOWN_FLOOR;
+            hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
         break;
 
-        case EVENT_FOUND_FLOOR:
+        // Implicit falltrough intentional,
+        // handled the same way
+        case EVENT_FLOOR_1:
+        case EVENT_FLOOR_2:
+        case EVENT_FLOOR_3:
+        case EVENT_FLOOR_4:
+            fsm.current_floor = (int)event;
             fsm_transition(&state_idle);
         break;
 
@@ -137,6 +144,10 @@ static void state_idle(fsm_event_t event)
             fsm.state_name = STATE_IDLE;
         break;
 
+        case EVENT_QUEUE_NOT_EMPTY:
+            fsm_transition(&state_moving);
+        break;
+
         case EVENT_EXIT:
 
         break;
@@ -152,10 +163,37 @@ static void state_moving(fsm_event_t event)
     {
         case EVENT_ENTRY:
             fsm.state_name = STATE_MOVING;
+
+            // Determine direction to move
+            if()
+            {
+                hardware_command_movement(HARDWARE_MOVEMENT_UP);
+            }
+            else
+            {
+                hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
+            }
+        break;
+
+        // Implicit falltrough intentional,
+        // handled the same way
+        case EVENT_FLOOR_1:
+        case EVENT_FLOOR_2:
+        case EVENT_FLOOR_3:
+        case EVENT_FLOOR_4:
+            fsm.current_floor = (int)event;
+
+            // Check if should stop
+            if(...)
+            {
+                elevator_call_remove_request();
+                fsm_transition(&state_door_open);
+            }  
+
         break;
 
         case EVENT_EXIT:
-
+            hardware_command_movement(HARDWARE_MOVEMENT_STOP);
         break;
         default:
         break;
@@ -169,15 +207,23 @@ static void state_door_open(fsm_event_t event)
         case EVENT_ENTRY:
             fsm.state_name = STATE_DOOR_OPEN;
             hardware_command_door_open(true);
+            timer_restart();
         break;
 
         case EVENT_OBSTRUCTION_ACTIVE:
-            //fsm_transition(&state_door_open);
-            // reset_timer, state transition vil ikke funke, blinke leds og shit
+            timer_restart();
         break;
 
         case EVENT_TIMER_TIMEOUT:
-            fsm_transition(&state_idle);
+            // Check if items in queue
+            if(queue_not_empty())
+            {
+                fsm_transition(&state_moving);
+            }
+            else
+            {
+                fsm_transition(&state_idle);
+            }
         break;
 
         case EVENT_EXIT:
@@ -196,18 +242,19 @@ static void state_emergency_stop(fsm_event_t event)
         case EVENT_ENTRY:
             fsm.state_name = STATE_EMERGENCY_STOP;
             hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+            // CLEAR ALL REQUESTS
         break;
 
         case EVENT_STOP_BUTTON_RELEASED:
         { 
-            // if(on_floor())
-            // {
-            //     fsm_transition(&state_emergency_stop_floor);
-            // }
-            // else
-            // {
-            //     fsm_transition(&state_emergency_stop_nowhere);
-            // }
+            if(utility_on_floor())
+            {
+                fsm_transition(&state_emergency_stop_floor);
+            }
+            else
+            {
+                fsm_transition(&state_emergency_stop_nowhere);
+            }
         }   
         break;
 
@@ -250,8 +297,12 @@ static void state_emergency_stop_floor(fsm_event_t event)
             hardware_command_door_open(true);
         break;
 
-        case EVENT_EXIT:
+        case EVENT_STOP_BUTTON_RELEASED:
+            fsm_transition(&state_door_open);
+        break;
 
+        case EVENT_EXIT:
+            
         break;
 
         default:

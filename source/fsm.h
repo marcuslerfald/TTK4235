@@ -24,14 +24,18 @@
         STATE(STATE_EMERGENCY_STOP_FLOOR)   \
         STATE(STATE_EMERGENCY_STOP_NOWHERE)
 
+// EVENT_FLOOR_1-4 placed in beginning to use numerical value
 #define FOREACH_EVENT(EVENT)                \
+        EVENT(EVENT_FLOOR_1)                \
+        EVENT(EVENT_FLOOR_2)                \
+        EVENT(EVENT_FLOOR_3)                \
+        EVENT(EVENT_FLOOR_4)                \
         EVENT(EVENT_HW_INIT_DONE)           \
-        EVENT(EVENT_FOUND_FLOOR)            \
         EVENT(EVENT_STOP_BUTTON_PRESSED)    \
         EVENT(EVENT_STOP_BUTTON_RELEASED)   \
         EVENT(EVENT_TIMER_TIMEOUT)          \
         EVENT(EVENT_OBSTRUCTION_ACTIVE)     \
-        EVENT(EVENT_REACHED_FLOOR_IN_QUEUE) \
+        EVENT(EVENT_QUEUE_NOT_EMPTY)        \
         EVENT(EVENT_ENTRY)                  \
         EVENT(EVENT_EXIT)
 
@@ -48,9 +52,17 @@ typedef enum
     FOREACH_STATE(GENERATE_ENUM)
 } fsm_state_t;
 
+typedef enum
+{
+    DIRECTION_UP,
+    DIRECTION_DOWN
+} fsm_direction_t;
+
 
 /**
- * @brief Sets initial state of state machine
+ * @brief Sets initial state of state machine.
+ * 
+ * @note Should only be called once at startup of program  
  * 
  */
 void fsm_init();
@@ -64,14 +76,14 @@ void fsm_run();
 /**
  * @brief Dispatches event to the state machine
  * 
- * @param event 
+ * @param event The event to be handled by the state machine
  */
 void fsm_dispatch(fsm_event_t event);
 
 /**
  * @brief Returns current state of state machine
  * 
- * @return fsm_state_t 
+ * @return fsm_state_t The current state of the state machine
  */
 fsm_state_t fsm_get_state();
 

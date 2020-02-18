@@ -41,8 +41,6 @@ int main(){
 
     fsm_dispatch(EVENT_HW_INIT_DONE);
 
-    hardware_command_movement(HARDWARE_MOVEMENT_UP);
-
     while(1){
         // Check stop button
         if(hardware_read_stop_signal())
@@ -70,9 +68,7 @@ int main(){
                 hardware_command_floor_indicator_on(floor);
                 
                 // Notify FSM
-                fsm_dispatch(EVENT_FOUND_FLOOR);
-
-                
+                fsm_dispatch((fsm_event_t) floor);
             }  
         }
 

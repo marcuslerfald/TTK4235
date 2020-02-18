@@ -10,6 +10,7 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
 #define HARDWARE_NUMBER_OF_FLOORS 4
+#define HARDWARE_NUMBER_OF_BUTTONS 3
 
 /**
  * @brief Movement type used in @c hardware_command_movement.
@@ -122,4 +123,4 @@ void hardware_command_stop_light(int on);
  */
 void hardware_command_order_light(int floor, HardwareOrder order_type, int on);
 
-#endif
+#endif  

@@ -144,6 +144,10 @@ static void state_idle(fsm_event_t event)
             fsm.state_name = STATE_IDLE;
         break;
 
+        case EVENT_STOP_BUTTON_PRESSED:
+            fsm_transition(&state_emergency_stop);
+        break;
+
         case EVENT_QUEUE_NOT_EMPTY:
             fsm_transition(&state_moving);
         break;
@@ -173,6 +177,10 @@ static void state_moving(fsm_event_t event)
             {
                 hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
             }
+        break;
+
+        case EVENT_STOP_BUTTON_PRESSED:
+            fsm_transition(&state_emergency_stop);
         break;
 
         // Implicit falltrough intentional,
@@ -208,6 +216,10 @@ static void state_door_open(fsm_event_t event)
             fsm.state_name = STATE_DOOR_OPEN;
             hardware_command_door_open(true);
             timer_restart();
+        break;
+        
+        case EVENT_STOP_BUTTON_PRESSED:
+            fsm_transition(&state_emergency_stop);
         break;
 
         case EVENT_OBSTRUCTION_ACTIVE:

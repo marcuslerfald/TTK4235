@@ -19,7 +19,8 @@
 #include "hardware.h"
 
 #include "utility.h"
-
+#include "timer.h"
+#include "queue.h"
 
 // Strings for both events and states, for debugging purposes
 static const char *EVENT_STRING[] = {
@@ -39,11 +40,12 @@ struct fsm_t {
     state_function state;
     fsm_state_t state_name;
     int current_floor;
-    fsm_direction_t direction;
+    direction_t direction;
 };
 
 // FSM functions
 static void fsm_transition(state_function new_state);
+static bool elevator_on_floor();
 
 // State functions
 static void state_init                  (fsm_event_t event);
@@ -87,6 +89,20 @@ static void fsm_transition(state_function new_state)
     printf("State transition to : %s\n", STATE_STRING[fsm_get_state()]);
 }
 
+
+static bool elevator_on_floor()
+{
+    for(int floor = 0; floor < HARDWARE_NUMBER_OF_FLOORS; floor++) 
+    {
+        if(hardware_read_floor_sensor(floor))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // State Functions
 static void state_init(fsm_event_t event)
 {
@@ -95,6 +111,7 @@ static void state_init(fsm_event_t event)
         case EVENT_ENTRY:
             fsm.state_name = STATE_INIT;
         break;
+
         case EVENT_HW_INIT_DONE:
             fsm_transition(&state_unknown_floor);
         break;
@@ -129,6 +146,7 @@ static void state_unknown_floor(fsm_event_t event)
 
         case EVENT_EXIT:
             hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+            queue_clear();
         break;
 
         default:
@@ -168,15 +186,23 @@ static void state_moving(fsm_event_t event)
         case EVENT_ENTRY:
             fsm.state_name = STATE_MOVING;
 
+            int requested_floor = queue_get_next(fsm.current_floor, fsm.direction);
+            
             // Determine direction to move
-            if()
+            if(requested_floor > fsm.current_floor)
             {
                 hardware_command_movement(HARDWARE_MOVEMENT_UP);
+                fsm.direction = DIRECTION_UP;
+            }
+            else if(requested_floor < fsm.current_floor)
+            {
+                hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
+                fsm.direction = DIRECTION_DOWN;
             }
             else
             {
-                hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
-            }
+                fsm_transition(&state_door_open);
+            } 
         break;
 
         case EVENT_STOP_BUTTON_PRESSED:
@@ -192,9 +218,11 @@ static void state_moving(fsm_event_t event)
             fsm.current_floor = (int)event;
 
             // Check if should stop
-            if(...)
+            int requested_floor = queue_get_next(fsm.current_floor, fsm.direction);
+
+            if(fsm.current_floor == requested_floor)
             {
-                elevator_call_remove_request();
+                queue_remove_request(fsm.current_floor, fsm.direction);
                 fsm_transition(&state_door_open);
             }  
 
@@ -228,7 +256,7 @@ static void state_door_open(fsm_event_t event)
 
         case EVENT_TIMER_TIMEOUT:
             // Check if items in queue
-            if(queue_not_empty())
+            if(queue_get_next(fsm.current_floor, fsm.direction) != QUEUE_EMPTY)
             {
                 fsm_transition(&state_moving);
             }
@@ -254,12 +282,8 @@ static void state_emergency_stop(fsm_event_t event)
         case EVENT_ENTRY:
             fsm.state_name = STATE_EMERGENCY_STOP;
             hardware_command_movement(HARDWARE_MOVEMENT_STOP);
-            // CLEAR ALL REQUESTS
-        break;
 
-        case EVENT_STOP_BUTTON_RELEASED:
-        { 
-            if(utility_on_floor())
+            if(elevator_on_floor())
             {
                 fsm_transition(&state_emergency_stop_floor);
             }
@@ -267,7 +291,7 @@ static void state_emergency_stop(fsm_event_t event)
             {
                 fsm_transition(&state_emergency_stop_nowhere);
             }
-        }   
+    
         break;
 
         case EVENT_EXIT:
@@ -292,7 +316,7 @@ static void state_emergency_stop_nowhere(fsm_event_t event)
         break;
 
         case EVENT_EXIT:
-
+            queue_clear();
         break;
 
         default:
@@ -314,7 +338,7 @@ static void state_emergency_stop_floor(fsm_event_t event)
         break;
 
         case EVENT_EXIT:
-            
+            queue_clear();
         break;
 
         default:

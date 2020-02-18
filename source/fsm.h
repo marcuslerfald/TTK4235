@@ -52,12 +52,6 @@ typedef enum
     FOREACH_STATE(GENERATE_ENUM)
 } fsm_state_t;
 
-typedef enum
-{
-    DIRECTION_UP,
-    DIRECTION_DOWN
-} fsm_direction_t;
-
 
 /**
  * @brief Sets initial state of state machine.

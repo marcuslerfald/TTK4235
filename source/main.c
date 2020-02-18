@@ -3,6 +3,7 @@
 #include <signal.h>
 #include "hardware.h"
 #include "fsm.h"
+#include "queue.h"
 
 static void clear_all_order_lights(){
     HardwareOrder order_types[3] = {
@@ -46,7 +47,6 @@ int main(){
         if(hardware_read_stop_signal())
         {
             fsm_dispatch(EVENT_STOP_BUTTON_PRESSED);
-            hardware_command_movement(HARDWARE_MOVEMENT_STOP);
             break;
         }
         else

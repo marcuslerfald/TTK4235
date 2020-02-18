@@ -82,6 +82,15 @@ int queue_get_next(int current_floor, direction_t moving_direction)
         } 
     }
 
-    return -1;
+    return QUEUE_EMPTY;
     
+}
+
+void queue_clear()
+{
+    for(int i = 0; i < QUEUE_LENGTH; i++)
+    {
+        queue_up[i] = false;
+        queue_down[i] = false; 
+    } 
 }

@@ -11,6 +11,8 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
+#define QUEUE_EMPTY -1
+
 typedef enum {
     DIRECTION_UP,
     DIRECTION_DOWN
@@ -37,8 +39,14 @@ void queue_remove_request(int floor, direction_t requested_direction);
  * 
  * @param current_floor     The current floor the elevator is in
  * @param moving_direction  The current direction of travel for the elevator
- * @return int              The floor to travel to, 0 indexed. -1 if no requests in the queue.
+ * @return int              The floor to travel to, 0 indexed. QUEUE_EMPTY if no requests in the queue.
  */
 int queue_get_next(int current_floor, direction_t moving_direction);
+
+/**
+ * @brief Erases all requests in queue
+ * 
+ */
+void queue_clear();
 
 #endif // QUEUE_H

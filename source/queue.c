@@ -31,7 +31,7 @@ void queue_remove_request(int floor, direction_t requested_direction)
     }
 }
 
-int queue_get_next(int current_floor, direction_t moving_direction)
+void queue_get_next(int current_floor, direction_t moving_direction, int *next_floor, direction_t *next_direction)
 {
     if(moving_direction == DIRECTION_UP)
     {
@@ -39,21 +39,27 @@ int queue_get_next(int current_floor, direction_t moving_direction)
         {
             if(queue_up[i])
             {
-                return i;
+                *next_floor = i;
+                *next_direction = DIRECTION_UP;
+                return;
             }
         }
         for(int i = QUEUE_LENGTH - 1; i > -1; i--)
         {
             if(queue_down[i])
             {
-                return i;
+                *next_floor = i;
+                *next_direction = DIRECTION_DOWN;
+                return;
             } 
         }
         for(int i = 0; i < current_floor; i++)
         {
             if(queue_up[i])
             {
-                return i;
+                *next_floor = i;
+                *next_direction = DIRECTION_UP;
+                return;
             } 
         } 
     }
@@ -63,27 +69,33 @@ int queue_get_next(int current_floor, direction_t moving_direction)
         {
             if(queue_down[i])
             {
-                return i;
+                *next_floor = i;
+                *next_direction = DIRECTION_DOWN;
+                return;
             } 
         } 
         for(int i = 0; i < QUEUE_LENGTH; i++)
         {
             if(queue_up[i])
             {
-                return i;
+                *next_floor = i;
+                *next_direction = DIRECTION_UP;
+                return;
             } 
         } 
         for(int i = QUEUE_LENGTH - 1; i > current_floor; i--)
         {
             if(queue_down[i])
             {
-                return i;
+                *next_floor = i;
+                *next_direction = DIRECTION_DOWN;
+                return;
             } 
         } 
     }
 
-    return QUEUE_EMPTY;
-    
+    *next_floor = QUEUE_EMPTY;
+    return;
 }
 
 void queue_clear()

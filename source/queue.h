@@ -39,9 +39,10 @@ void queue_remove_request(int floor, direction_t requested_direction);
  * 
  * @param current_floor     The current floor the elevator is in
  * @param moving_direction  The current direction of travel for the elevator
- * @return int              The floor to travel to, 0 indexed. QUEUE_EMPTY if no requests in the queue.
+ * @param next_floor[out]   The next floor to travel to, set to QUEUE_EMPTY if nothing in queue
+ * @param moving_direction  The requested direction, not updated if nothing in queue
  */
-int queue_get_next(int current_floor, direction_t moving_direction);
+void queue_get_next(int current_floor, direction_t moving_direction, int *next_floor, direction_t *next_direction);
 
 /**
  * @brief Erases all requests in queue

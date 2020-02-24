@@ -18,7 +18,6 @@
 
 #include "hardware.h"
 
-#include "utility.h"
 #include "timer.h"
 #include "queue.h"
 
@@ -46,6 +45,9 @@ struct fsm_t {
 // FSM functions
 static void fsm_transition(state_function new_state);
 static bool elevator_on_floor();
+static void elevator_go_down();
+static void elevator_go_up();
+static void clear_all_order_lights();
 
 // State functions
 static void state_init                  (fsm_event_t event);
@@ -77,10 +79,18 @@ fsm_state_t fsm_get_state()
     return fsm.state_name;
 }
 
+int fsm_get_floor()
+{
+    return fsm.current_floor;
+}
+
+
 // FSM functions
 static void fsm_transition(state_function new_state)
 {
     fsm_dispatch(EVENT_EXIT);
+
+    printf("State transition from : %s\n", STATE_STRING[fsm_get_state()]);
 
     fsm.state = new_state;
 
@@ -101,6 +111,33 @@ static bool elevator_on_floor()
     }
 
     return false;
+}
+
+static void elevator_go_down()
+{
+    hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
+    fsm.direction = DIRECTION_DOWN;
+}
+
+static void elevator_go_up()
+{
+    hardware_command_movement(HARDWARE_MOVEMENT_UP);
+    fsm.direction = DIRECTION_UP;
+}
+
+static void clear_all_order_lights(){
+    HardwareOrder order_types[3] = {
+        HARDWARE_ORDER_UP,
+        HARDWARE_ORDER_INSIDE,
+        HARDWARE_ORDER_DOWN
+    };
+
+    for(int f = 0; f < HARDWARE_NUMBER_OF_FLOORS; f++){
+        for(int i = 0; i < 3; i++){
+            HardwareOrder type = order_types[i];
+            hardware_command_order_light(f, type, 0);
+        }
+    }
 }
 
 // State Functions
@@ -131,7 +168,7 @@ static void state_unknown_floor(fsm_event_t event)
     {
         case EVENT_ENTRY:
             fsm.state_name = STATE_UNKNOWN_FLOOR;
-            hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
+            elevator_go_down();
         break;
 
         // Implicit falltrough intentional,
@@ -181,27 +218,42 @@ static void state_idle(fsm_event_t event)
 
 static void state_moving(fsm_event_t event)
 {
+    int requested_floor;
+    direction_t requested_direction;
+    queue_get_next(fsm.current_floor, fsm.direction, &requested_floor, &requested_direction);
+    
+
     switch(event)
     {
         case EVENT_ENTRY:
             fsm.state_name = STATE_MOVING;
-
-            int requested_floor = queue_get_next(fsm.current_floor, fsm.direction);
             
             // Determine direction to move
             if(requested_floor > fsm.current_floor)
             {
-                hardware_command_movement(HARDWARE_MOVEMENT_UP);
-                fsm.direction = DIRECTION_UP;
+                elevator_go_up();
             }
             else if(requested_floor < fsm.current_floor)
             {
-                hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
-                fsm.direction = DIRECTION_DOWN;
+                elevator_go_down();
             }
             else
             {
-                fsm_transition(&state_door_open);
+                // Fiks det her, funkerikke
+                if(elevator_on_floor())
+                {
+                    fsm_transition(&state_door_open);
+
+                    queue_remove_request(requested_floor, DIRECTION_UP);
+                    queue_remove_request(requested_floor, DIRECTION_DOWN);
+                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_UP, false);
+                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_DOWN, false);
+                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_INSIDE, false);
+                }
+                else
+                {
+                    
+                }
             } 
         break;
 
@@ -217,14 +269,25 @@ static void state_moving(fsm_event_t event)
         case EVENT_FLOOR_4:
             fsm.current_floor = (int)event;
 
-            // Check if should stop
-            int requested_floor = queue_get_next(fsm.current_floor, fsm.direction);
-
             if(fsm.current_floor == requested_floor)
             {
-                queue_remove_request(fsm.current_floor, fsm.direction);
+                // Clear order lights and queue request
+                if(requested_direction == DIRECTION_UP)
+                {
+                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_UP, false);
+                    queue_remove_request(fsm.current_floor, DIRECTION_UP);
+                }
+                else
+                {
+                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_DOWN, false);
+                    queue_remove_request(fsm.current_floor, DIRECTION_DOWN);
+                }
+
+                // Always clear internal order
+                hardware_command_order_light(requested_floor, HARDWARE_ORDER_INSIDE, false);
+
                 fsm_transition(&state_door_open);
-            }  
+            }
 
         break;
 
@@ -238,6 +301,10 @@ static void state_moving(fsm_event_t event)
 
 static void state_door_open(fsm_event_t event)
 {
+    int requested_floor;
+    direction_t requested_direction;
+    queue_get_next(fsm.current_floor, fsm.direction, &requested_floor, &requested_direction);
+
     switch(event)
     {
         case EVENT_ENTRY:
@@ -256,7 +323,7 @@ static void state_door_open(fsm_event_t event)
 
         case EVENT_TIMER_TIMEOUT:
             // Check if items in queue
-            if(queue_get_next(fsm.current_floor, fsm.direction) != QUEUE_EMPTY)
+            if(requested_floor != QUEUE_EMPTY)
             {
                 fsm_transition(&state_moving);
             }
@@ -282,6 +349,7 @@ static void state_emergency_stop(fsm_event_t event)
         case EVENT_ENTRY:
             fsm.state_name = STATE_EMERGENCY_STOP;
             hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+            hardware_command_stop_light(true);
 
             if(elevator_on_floor())
             {
@@ -317,6 +385,8 @@ static void state_emergency_stop_nowhere(fsm_event_t event)
 
         case EVENT_EXIT:
             queue_clear();
+            hardware_command_stop_light(false);
+            clear_all_order_lights();
         break;
 
         default:
@@ -339,6 +409,8 @@ static void state_emergency_stop_floor(fsm_event_t event)
 
         case EVENT_EXIT:
             queue_clear();
+            hardware_command_stop_light(false);
+            clear_all_order_lights();
         break;
 
         default:

@@ -81,5 +81,12 @@ void fsm_dispatch(fsm_event_t event);
  */
 fsm_state_t fsm_get_state();
 
+/**
+ * @brief Retruns current floor of elevator
+ * 
+ * @return int floor number, 0 indexed
+ */
+int fsm_get_floor();
+
 
 #endif // FSM_H

@@ -178,6 +178,7 @@ static void state_unknown_floor(fsm_event_t event)
         case EVENT_FLOOR_3:
         case EVENT_FLOOR_4:
             fsm.current_floor = (int)event;
+
             fsm_transition(&state_idle);
         break;
 
@@ -239,20 +240,21 @@ static void state_moving(fsm_event_t event)
             }
             else
             {
-                // Fiks det her, funkerikke
                 if(elevator_on_floor())
                 {
-                    fsm_transition(&state_door_open);
-
                     queue_remove_request(requested_floor, DIRECTION_UP);
                     queue_remove_request(requested_floor, DIRECTION_DOWN);
                     hardware_command_order_light(requested_floor, HARDWARE_ORDER_UP, false);
                     hardware_command_order_light(requested_floor, HARDWARE_ORDER_DOWN, false);
                     hardware_command_order_light(requested_floor, HARDWARE_ORDER_INSIDE, false);
+                    
+                    fsm_transition(&state_door_open);
                 }
                 else
                 {
-                    
+                    // Elevator is somewhere inbetween floors, 
+                    // due to previous emergency stop
+
                 }
             } 
         break;
@@ -351,6 +353,9 @@ static void state_emergency_stop(fsm_event_t event)
             hardware_command_movement(HARDWARE_MOVEMENT_STOP);
             hardware_command_stop_light(true);
 
+            queue_clear();
+            clear_all_order_lights();
+
             if(elevator_on_floor())
             {
                 fsm_transition(&state_emergency_stop_floor);
@@ -384,9 +389,7 @@ static void state_emergency_stop_nowhere(fsm_event_t event)
         break;
 
         case EVENT_EXIT:
-            queue_clear();
             hardware_command_stop_light(false);
-            clear_all_order_lights();
         break;
 
         default:
@@ -408,9 +411,7 @@ static void state_emergency_stop_floor(fsm_event_t event)
         break;
 
         case EVENT_EXIT:
-            queue_clear();
             hardware_command_stop_light(false);
-            clear_all_order_lights();
         break;
 
         default:

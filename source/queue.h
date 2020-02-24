@@ -37,16 +37,17 @@ void queue_remove_request(int floor, direction_t requested_direction);
 /**
  * @brief Retrieves the next element in the queue to travel to
  * 
- * @param current_floor     The current floor the elevator is in
- * @param moving_direction  The current direction of travel for the elevator
- * @param next_floor[out]   The next floor to travel to, set to QUEUE_EMPTY if nothing in queue
- * @param moving_direction  The requested direction, not updated if nothing in queue
+ * @param current_floor         The current floor the elevator is in
+ * @param moving_direction      The current direction of travel for the elevator
+ * @param next_floor[out]       The next floor to travel to, set to QUEUE_EMPTY if nothing in queue
+ * @param moving_direction[out] The requested direction, not updated if nothing in queue
+ * 
+ * @warning Providing NULL pointers to @p next_floor or @p moving_direction will lead to badness
  */
 void queue_get_next(int current_floor, direction_t moving_direction, int *next_floor, direction_t *next_direction);
 
 /**
  * @brief Erases all requests in queue
- * 
  */
 void queue_clear();
 

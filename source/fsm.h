@@ -25,6 +25,7 @@
         STATE(STATE_EMERGENCY_STOP_NOWHERE)
 
 // EVENT_FLOOR_1-4 placed in beginning to use numerical value
+// EVENT_ENTRY and EVENT_EXIT for internal FSM use
 #define FOREACH_EVENT(EVENT)                \
         EVENT(EVENT_FLOOR_1)                \
         EVENT(EVENT_FLOOR_2)                \

@@ -52,8 +52,8 @@ int main(){
         {
             fsm_dispatch(EVENT_STOP_BUTTON_PRESSED);
 
-            // Break to prevent from taking orders etc when stopped
-            break;
+            // continue to prevent from taking orders etc when stopped
+            continue;
         }
         else
         {

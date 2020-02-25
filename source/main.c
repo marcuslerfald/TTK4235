@@ -33,7 +33,8 @@ int main(){
 
     fsm_dispatch(EVENT_HW_INIT_DONE);
 
-    while(1){
+    while(1)
+    {
         /* Read floor sensors */
         for(int floor = 0; floor < HARDWARE_NUMBER_OF_FLOORS; floor++) 
         {
@@ -46,13 +47,19 @@ int main(){
                 fsm_dispatch((fsm_event_t) floor);
             }  
         }
+
+        /* Ignore all inputs in unkown floor state */
+        if(fsm_get_state() == STATE_UNKNOWN_FLOOR)
+        {
+            continue;
+        }   
         
         /* Check stop button */
         if(hardware_read_stop_signal())
         {
             fsm_dispatch(EVENT_STOP_BUTTON_PRESSED);
 
-            // continue to prevent from taking orders etc when stopped
+            // Continue to prevent from taking orders etc when stopped
             continue;
         }
         else

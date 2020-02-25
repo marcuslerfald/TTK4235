@@ -1,12 +1,13 @@
 /**
  * @file timer.h
- * @brief Implements a simple timer that times out in @c TIMER_TIMEOUT_SECONDS seconds  
+ * @brief Implements a timer that times out in @c TIMER_TIMEOUT_SECONDS seconds  
  */
 #ifndef TIMER_H
 #define TIMER_H
 
 #include <stdbool.h>
 
+/*! Seconds for timer to time out */
 #define TIMER_TIMOUT_SECONDS 3
 
 /**

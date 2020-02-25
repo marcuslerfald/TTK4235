@@ -1,10 +1,11 @@
 /**
  * @file queue.h
- * @brief Simple elevator queue implementation
+ * @brief Elevator queue implementation
  */
 #ifndef QUEUE_H
 #define QUEUE_H
 
+/*! Value used for signaling that the queue is empty */
 #define QUEUE_EMPTY -1
 
 typedef enum {
@@ -31,10 +32,10 @@ void queue_remove_request(int floor, direction_t requested_direction);
 /**
  * @brief Retrieves the next element in the queue to travel to
  * 
- * @param current_floor         The current floor the elevator is in
- * @param moving_direction      The current direction of travel for the elevator
- * @param next_floor[out]       The next floor to travel to, set to QUEUE_EMPTY if nothing in queue
- * @param moving_direction[out] The requested direction, not updated if nothing in queue
+ * @param current_floor             The current floor the elevator is in
+ * @param moving_direction          The current direction of travel for the elevator
+ * @param next_floor [out]          The next floor to travel to, set to QUEUE_EMPTY if nothing in queue
+ * @param moving_direction [out]    The requested direction, not updated if nothing in queue
  * 
  * @warning Providing NULL pointers to @p next_floor or @p moving_direction will lead to badness
  */

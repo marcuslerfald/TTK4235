@@ -28,12 +28,13 @@ typedef enum {
     POSITION_ON
 } relative_position_t;
 
+
 struct fsm_t {
-    state_function state;
-    fsm_state_t state_name;
-    int current_floor;
-    direction_t direction;
-    relative_position_t position;
+    state_function state;           /*!< state function of current state */
+    fsm_state_t state_name;         /*!< The name of the current state*/
+    int current_floor;              /*!< Current floor number of elevator */
+    direction_t direction;          /*!< Current traveling direction of elevator */
+    relative_position_t position;   /*!< Relative position of elevator */
 };
 
 // FSM functions

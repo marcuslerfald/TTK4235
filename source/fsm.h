@@ -34,14 +34,19 @@
         EVENT(EVENT_ENTRY)                  \
         EVENT(EVENT_EXIT)
 
+/*! Generates enumerated values */
 #define GENERATE_ENUM(ENUM) ENUM,
+
+/*! Generates stringified values */
 #define GENERATE_STRING(STRING) #STRING,
 
+/*! Events that state machine acts upon */
 typedef enum
 {
     FOREACH_EVENT(GENERATE_ENUM)
 } fsm_event_t;
 
+/*! The different states the state machine can be in */
 typedef enum
 {
     FOREACH_STATE(GENERATE_ENUM)
@@ -55,12 +60,6 @@ typedef enum
  * 
  */
 void fsm_init();
-
-/**
- * @brief Runs one iteration of the state machine
- * 
- */
-void fsm_run();
 
 /**
  * @brief Dispatches event to the state machine

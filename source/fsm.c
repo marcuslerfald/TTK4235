@@ -262,20 +262,9 @@ static void state_moving(fsm_event_t event)
             {
                 if(elevator_on_floor())
                 {
-                    if(requested_direction == DIRECTION_UP) 
-                    {
-                        queue_remove_request(requested_floor, DIRECTION_UP);
-                        hardware_command_order_light(requested_floor, HARDWARE_ORDER_UP, false);
-                    }
-                    else
-                    {
-                        queue_remove_request(requested_floor, DIRECTION_DOWN);
-                        hardware_command_order_light(requested_floor, HARDWARE_ORDER_DOWN, false);
-                    }
-                    
-                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_INSIDE, false);
-                    
-                    fsm_transition(&state_door_open);
+                    // Elevator on correct floor
+
+                    // Do nothing, FSM will receive EVENT_FLOOR_X shortly, then open door
                 }
                 else
                 {

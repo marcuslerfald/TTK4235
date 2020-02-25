@@ -132,7 +132,8 @@ static void elevator_go_up()
     fsm.direction = DIRECTION_UP;
 }
 
-static void clear_all_order_lights(){
+static void clear_all_order_lights()
+{
     HardwareOrder order_types[3] = {
         HARDWARE_ORDER_UP,
         HARDWARE_ORDER_INSIDE,
@@ -194,6 +195,7 @@ static void state_unknown_floor(fsm_event_t event)
         case EVENT_EXIT:
             hardware_command_movement(HARDWARE_MOVEMENT_STOP);
             queue_clear();
+            clear_all_order_lights();
         break;
 
         default:

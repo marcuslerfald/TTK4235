@@ -71,7 +71,7 @@ int main(){
             /* Internal orders */
             if(hardware_read_order(f, HARDWARE_ORDER_INSIDE))
             {
-                int delta_floor = fsm_get_floor() - f;
+                int delta_floor = f - fsm_get_floor();
 
                 // Determine if up or down request
                 if(delta_floor < 0)

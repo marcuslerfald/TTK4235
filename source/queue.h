@@ -1,12 +1,6 @@
 /**
  * @file queue.h
- * @author your name (you@domain.com)
- * @brief 
- * @version 0.1
- * @date 2020-02-18
- * 
- * @copyright Copyright (c) 2020
- * 
+ * @brief Simple elevator queue implementation
  */
 #ifndef QUEUE_H
 #define QUEUE_H

@@ -1,14 +1,8 @@
 /**
  * @file fsm.h
- * @author your name (you@domain.com)
- * @brief 
- * @version 0.1
- * @date 2020-02-11
- * 
- * @copyright Copyright (c) 2020
+ * @brief Finite state machine for an elevator
  * 
  * @note Based on https://barrgroup.com/embedded-systems/how-to/state-machines-event-driven-systems 
- * 
  */
 
 #ifndef FSM_H

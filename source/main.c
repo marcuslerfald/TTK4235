@@ -74,10 +74,23 @@ int main(){
         }
 
         /* Polling buttons and adding requests */
-        for(int f = 0; f < HARDWARE_NUMBER_OF_FLOORS; f++){
+        for(int f = 0; f < HARDWARE_NUMBER_OF_FLOORS; f++)
+        {
+            /* Just reset door open timer when doors open and order request for same floor */
+            if(fsm_get_state() == STATE_DOOR_OPEN && fsm_get_floor() == f)
+            {
+                if(hardware_read_order(f, HARDWARE_ORDER_INSIDE) ||
+                   hardware_read_order(f, HARDWARE_ORDER_UP)     ||
+                   hardware_read_order(f, HARDWARE_ORDER_DOWN))
+                {
+                    timer_restart();
+                }
+                continue;
+            } 
+
             /* Internal orders */
             if(hardware_read_order(f, HARDWARE_ORDER_INSIDE))
-            {
+            { 
                 int delta_floor = f - fsm_get_floor();
 
                 // Determine if up or down request

@@ -7,7 +7,6 @@
 
 #include <stdbool.h>
 
-/*! Seconds for timer to time out */
 #define TIMER_TIMOUT_SECONDS 3
 
 /**

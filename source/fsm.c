@@ -55,28 +55,28 @@ static void state_emergency_stop_nowhere(fsm_event_t event);
 static void state_emergency_stop_floor  (fsm_event_t event);
 
 // FSM Instance
-static fsm_t fsm;
+static fsm_t m_fsm;
 
 // 
 void fsm_init()
 {
-    fsm.state = &state_init;
+    m_fsm.state = &state_init;
 }
 
 void fsm_dispatch(fsm_event_t event)
 {
     //printf("%s\n", EVENT_STRING[event]);
-    (fsm.state)(event);
+    (m_fsm.state)(event);
 }
 
 fsm_state_t fsm_get_state()
 {
-    return fsm.state_name;
+    return m_fsm.state_name;
 }
 
 int fsm_get_floor()
 {
-    return fsm.current_floor;
+    return m_fsm.current_floor;
 }
 
 
@@ -87,7 +87,7 @@ static void fsm_transition(state_function new_state)
 
     printf("State transition from : %s\n", STATE_STRING[fsm_get_state()]);
 
-    fsm.state = new_state;
+    m_fsm.state = new_state;
 
     fsm_dispatch(EVENT_ENTRY);
 
@@ -111,13 +111,13 @@ static bool elevator_on_floor()
 static void elevator_go_down()
 {
     hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
-    fsm.direction = DIRECTION_DOWN;
+    m_fsm.direction = DIRECTION_DOWN;
 }
 
 static void elevator_go_up()
 {
     hardware_command_movement(HARDWARE_MOVEMENT_UP);
-    fsm.direction = DIRECTION_UP;
+    m_fsm.direction = DIRECTION_UP;
 }
 
 static void clear_all_order_lights()
@@ -142,7 +142,7 @@ static void state_init(fsm_event_t event)
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_INIT;
+            m_fsm.state_name = STATE_INIT;
         break;
 
         case EVENT_HW_INIT_DONE:
@@ -163,7 +163,7 @@ static void state_unknown_floor(fsm_event_t event)
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_UNKNOWN_FLOOR;
+            m_fsm.state_name = STATE_UNKNOWN_FLOOR;
             elevator_go_down();
         break;
 
@@ -173,9 +173,9 @@ static void state_unknown_floor(fsm_event_t event)
         case EVENT_FLOOR_2:
         case EVENT_FLOOR_3:
         case EVENT_FLOOR_4:
-            fsm.current_floor = (int)event;
+            m_fsm.current_floor = (int)event;
 
-            fsm.position = POSITION_ON;
+            m_fsm.position = POSITION_ON;
 
             fsm_transition(&state_idle);
         break;
@@ -196,7 +196,7 @@ static void state_idle(fsm_event_t event)
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_IDLE;
+            m_fsm.state_name = STATE_IDLE;
         break;
 
         case EVENT_STOP_BUTTON_PRESSED:
@@ -220,30 +220,30 @@ static void state_moving(fsm_event_t event)
 {
     int requested_floor;
     direction_t requested_direction;
-    queue_get_next(fsm.current_floor, fsm.direction, &requested_floor, &requested_direction);
+    queue_get_next(m_fsm.current_floor, m_fsm.direction, &requested_floor, &requested_direction);
     
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_MOVING;
+            m_fsm.state_name = STATE_MOVING;
             
             // Determine direction to move
-            if(requested_floor > fsm.current_floor)
+            if(requested_floor > m_fsm.current_floor)
             {
                 elevator_go_up();
 
-                if(fsm.position == POSITION_ON)
+                if(m_fsm.position == POSITION_ON)
                 {
-                    fsm.position = POSITION_ABOVE;
+                    m_fsm.position = POSITION_ABOVE;
                 } 
             }
-            else if(requested_floor < fsm.current_floor)
+            else if(requested_floor < m_fsm.current_floor)
             {
                 elevator_go_down();
 
-                if(fsm.position == POSITION_ON)
+                if(m_fsm.position == POSITION_ON)
                 {
-                    fsm.position = POSITION_BELOW;
+                    m_fsm.position = POSITION_BELOW;
                 }
             }
             else
@@ -259,7 +259,7 @@ static void state_moving(fsm_event_t event)
                     // Elevator is somewhere inbetween floors, 
                     // due to previous emergency stop
                     
-                    if(fsm.position == POSITION_ABOVE)
+                    if(m_fsm.position == POSITION_ABOVE)
                     {
                         elevator_go_down();
                     }
@@ -281,38 +281,38 @@ static void state_moving(fsm_event_t event)
         case EVENT_FLOOR_2:
         case EVENT_FLOOR_3:
         case EVENT_FLOOR_4:
-            fsm.current_floor = (int)event;
+            m_fsm.current_floor = (int)event;
 
-            if(fsm.current_floor == requested_floor)
+            if(m_fsm.current_floor == requested_floor)
             {
                 // Clear order lights and queue request
                 if(requested_direction == DIRECTION_UP)
                 {
                     hardware_command_order_light(requested_floor, HARDWARE_ORDER_UP, false);
-                    queue_remove_request(fsm.current_floor, DIRECTION_UP);
+                    queue_remove_request(m_fsm.current_floor, DIRECTION_UP);
                 }
                 else
                 {
                     hardware_command_order_light(requested_floor, HARDWARE_ORDER_DOWN, false);
-                    queue_remove_request(fsm.current_floor, DIRECTION_DOWN);
+                    queue_remove_request(m_fsm.current_floor, DIRECTION_DOWN);
                 }
 
                 // Always clear internal order
                 hardware_command_order_light(requested_floor, HARDWARE_ORDER_INSIDE, false);
 
-                fsm.position = POSITION_ON;
+                m_fsm.position = POSITION_ON;
 
                 fsm_transition(&state_door_open);
             }
             else
             {
-                if(fsm.direction == DIRECTION_UP)
+                if(m_fsm.direction == DIRECTION_UP)
                 {
-                    fsm.position = POSITION_ABOVE;
+                    m_fsm.position = POSITION_ABOVE;
                 }
                 else
                 {
-                    fsm.position = POSITION_BELOW;
+                    m_fsm.position = POSITION_BELOW;
                 }
             }
 
@@ -330,12 +330,12 @@ static void state_door_open(fsm_event_t event)
 {
     int requested_floor;
     direction_t requested_direction;
-    queue_get_next(fsm.current_floor, fsm.direction, &requested_floor, &requested_direction);
+    queue_get_next(m_fsm.current_floor, m_fsm.direction, &requested_floor, &requested_direction);
 
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_DOOR_OPEN;
+            m_fsm.state_name = STATE_DOOR_OPEN;
             hardware_command_door_open(true);
             timer_restart();
         break;
@@ -374,7 +374,7 @@ static void state_emergency_stop(fsm_event_t event)
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_EMERGENCY_STOP;
+            m_fsm.state_name = STATE_EMERGENCY_STOP;
             hardware_command_movement(HARDWARE_MOVEMENT_STOP);
             hardware_command_stop_light(true);
 
@@ -406,7 +406,7 @@ static void state_emergency_stop_nowhere(fsm_event_t event)
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_EMERGENCY_STOP_NOWHERE;
+            m_fsm.state_name = STATE_EMERGENCY_STOP_NOWHERE;
         break;
 
         case EVENT_STOP_BUTTON_RELEASED:
@@ -427,7 +427,7 @@ static void state_emergency_stop_floor(fsm_event_t event)
     switch(event)
     {
         case EVENT_ENTRY:
-            fsm.state_name = STATE_EMERGENCY_STOP_FLOOR;
+            m_fsm.state_name = STATE_EMERGENCY_STOP_FLOOR;
             hardware_command_door_open(true);
         break;
 

@@ -8,6 +8,9 @@
 #ifndef FSM_H
 #define FSM_H
 
+/**
+ * @brief All the states the elevator can be in
+ */
 #define FOREACH_STATE(STATE)                \
         STATE(STATE_INIT)                   \
         STATE(STATE_UNKNOWN_FLOOR)          \
@@ -18,8 +21,12 @@
         STATE(STATE_EMERGENCY_STOP_FLOOR)   \
         STATE(STATE_EMERGENCY_STOP_NOWHERE)
 
-// EVENT_FLOOR_1-4 placed in beginning to use numerical value
-// EVENT_ENTRY and EVENT_EXIT for internal FSM use
+/**
+ * @brief All events recognized by the state machine
+ * 
+ * @note EVENT_FLOOR1-4 placed in beginning to use numerical value
+ * @note EVENT_ENTRY and EVENT_EXIT for internal FSM use only
+ */
 #define FOREACH_EVENT(EVENT)                \
         EVENT(EVENT_FLOOR_1)                \
         EVENT(EVENT_FLOOR_2)                \
@@ -40,13 +47,11 @@
 /*! Generates stringified values */
 #define GENERATE_STRING(STRING) #STRING,
 
-/*! Events that state machine acts upon */
 typedef enum
 {
     FOREACH_EVENT(GENERATE_ENUM)
 } fsm_event_t;
 
-/*! The different states the state machine can be in */
 typedef enum
 {
     FOREACH_STATE(GENERATE_ENUM)

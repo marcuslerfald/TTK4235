@@ -4,18 +4,18 @@
 
 #define QUEUE_LENGTH 4
 
-static bool queue_up[QUEUE_LENGTH] = { false };
-static bool queue_down[QUEUE_LENGTH] = { false }; 
+static bool m_queue_up[QUEUE_LENGTH] = { false };
+static bool m_queue_down[QUEUE_LENGTH] = { false }; 
 
 void queue_add_request(int floor, direction_t requested_direction)
 {
     if(requested_direction == DIRECTION_UP)
     {
-        queue_up[floor] = true; 
+        m_queue_up[floor] = true; 
     }
     else
     {
-        queue_down[floor] = true; 
+        m_queue_down[floor] = true; 
     }
 }
 
@@ -23,11 +23,11 @@ void queue_remove_request(int floor, direction_t requested_direction)
 {
     if(requested_direction == DIRECTION_UP)
     {
-        queue_up[floor] = false; 
+        m_queue_up[floor] = false; 
     }
     else
     {
-        queue_down[floor] = false; 
+        m_queue_down[floor] = false; 
     }
 }
 
@@ -37,7 +37,7 @@ void queue_get_next(int current_floor, direction_t moving_direction, int *next_f
     {
         for(int i = current_floor; i < QUEUE_LENGTH; i++)
         {
-            if(queue_up[i])
+            if(m_queue_up[i])
             {
                 *next_floor = i;
                 *next_direction = DIRECTION_UP;
@@ -46,7 +46,7 @@ void queue_get_next(int current_floor, direction_t moving_direction, int *next_f
         }
         for(int i = QUEUE_LENGTH - 1; i > -1; i--)
         {
-            if(queue_down[i])
+            if(m_queue_down[i])
             {
                 *next_floor = i;
                 *next_direction = DIRECTION_DOWN;
@@ -55,7 +55,7 @@ void queue_get_next(int current_floor, direction_t moving_direction, int *next_f
         }
         for(int i = 0; i < current_floor; i++)
         {
-            if(queue_up[i])
+            if(m_queue_up[i])
             {
                 *next_floor = i;
                 *next_direction = DIRECTION_UP;
@@ -67,7 +67,7 @@ void queue_get_next(int current_floor, direction_t moving_direction, int *next_f
     {
         for(int i = current_floor; i > -1; i--)
         {
-            if(queue_down[i])
+            if(m_queue_down[i])
             {
                 *next_floor = i;
                 *next_direction = DIRECTION_DOWN;
@@ -76,7 +76,7 @@ void queue_get_next(int current_floor, direction_t moving_direction, int *next_f
         } 
         for(int i = 0; i < QUEUE_LENGTH; i++)
         {
-            if(queue_up[i])
+            if(m_queue_up[i])
             {
                 *next_floor = i;
                 *next_direction = DIRECTION_UP;
@@ -85,7 +85,7 @@ void queue_get_next(int current_floor, direction_t moving_direction, int *next_f
         } 
         for(int i = QUEUE_LENGTH - 1; i > current_floor; i--)
         {
-            if(queue_down[i])
+            if(m_queue_down[i])
             {
                 *next_floor = i;
                 *next_direction = DIRECTION_DOWN;
@@ -102,7 +102,7 @@ void queue_clear()
 {
     for(int i = 0; i < QUEUE_LENGTH; i++)
     {
-        queue_up[i] = false;
-        queue_down[i] = false; 
+        m_queue_up[i] = false;
+        m_queue_down[i] = false; 
     } 
 }

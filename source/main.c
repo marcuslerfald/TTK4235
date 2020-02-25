@@ -26,9 +26,6 @@ int main(){
 
     signal(SIGINT, sigint_handler);
 
-    printf("=== Example Program ===\n");
-    printf("Press the stop button on the elevator panel to exit\n");
-
     timer_restart();
 
     fsm_dispatch(EVENT_HW_INIT_DONE);

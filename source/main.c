@@ -34,22 +34,6 @@ int main(){
     fsm_dispatch(EVENT_HW_INIT_DONE);
 
     while(1){
-        /* Check stop button */
-        if(hardware_read_stop_signal())
-        {
-            fsm_dispatch(EVENT_STOP_BUTTON_PRESSED);
-            break;
-        }
-        else
-        {
-            fsm_dispatch(EVENT_STOP_BUTTON_RELEASED);
-        }
-
-        if(hardware_read_obstruction_signal())
-        {
-            fsm_dispatch(EVENT_OBSTRUCTION_ACTIVE);
-        }         
-
         /* Read floor sensors */
         for(int floor = 0; floor < HARDWARE_NUMBER_OF_FLOORS; floor++) 
         {
@@ -61,6 +45,25 @@ int main(){
                 // Notify FSM
                 fsm_dispatch((fsm_event_t) floor);
             }  
+        }
+        
+        /* Check stop button */
+        if(hardware_read_stop_signal())
+        {
+            fsm_dispatch(EVENT_STOP_BUTTON_PRESSED);
+
+            // Break to prevent from taking orders etc when stopped
+            break;
+        }
+        else
+        {
+            fsm_dispatch(EVENT_STOP_BUTTON_RELEASED);
+        }
+
+        /* Checking for obstructions */
+        if(hardware_read_obstruction_signal())
+        {
+            fsm_dispatch(EVENT_OBSTRUCTION_ACTIVE);
         }
 
         /* Polling buttons and adding requests */
@@ -90,7 +93,7 @@ int main(){
             {
                 queue_add_request(f, DIRECTION_UP);
 
-                hardware_command_order_light(f, HARDWARE_ORDER_UP, 1);
+                hardware_command_order_light(f, HARDWARE_ORDER_UP, true);
                 
                 fsm_dispatch(EVENT_QUEUE_NOT_EMPTY);
             }
@@ -100,7 +103,7 @@ int main(){
             {
                 queue_add_request(f, DIRECTION_DOWN);
 
-                hardware_command_order_light(f, HARDWARE_ORDER_DOWN, 1);
+                hardware_command_order_light(f, HARDWARE_ORDER_DOWN, true);
                 
                 fsm_dispatch(EVENT_QUEUE_NOT_EMPTY);
             }

@@ -35,11 +35,18 @@ typedef struct fsm_t fsm_t;
 
 typedef void (*state_function)(fsm_event_t event);
 
+typedef enum {
+    POSITION_ABOVE,
+    POSITION_BELOW,
+    POSITION_ON
+} relative_position_t;
+
 struct fsm_t {
     state_function state;
     fsm_state_t state_name;
     int current_floor;
     direction_t direction;
+    relative_position_t position;
 };
 
 // FSM functions
@@ -179,6 +186,8 @@ static void state_unknown_floor(fsm_event_t event)
         case EVENT_FLOOR_4:
             fsm.current_floor = (int)event;
 
+            fsm.position = POSITION_ON;
+
             fsm_transition(&state_idle);
         break;
 
@@ -223,7 +232,6 @@ static void state_moving(fsm_event_t event)
     direction_t requested_direction;
     queue_get_next(fsm.current_floor, fsm.direction, &requested_floor, &requested_direction);
     
-
     switch(event)
     {
         case EVENT_ENTRY:
@@ -233,19 +241,36 @@ static void state_moving(fsm_event_t event)
             if(requested_floor > fsm.current_floor)
             {
                 elevator_go_up();
+
+                if(fsm.position == POSITION_ON)
+                {
+                    fsm.position = POSITION_ABOVE;
+                } 
             }
             else if(requested_floor < fsm.current_floor)
             {
                 elevator_go_down();
+
+                if(fsm.position == POSITION_ON)
+                {
+                    fsm.position = POSITION_BELOW;
+                }
             }
             else
             {
                 if(elevator_on_floor())
                 {
-                    queue_remove_request(requested_floor, DIRECTION_UP);
-                    queue_remove_request(requested_floor, DIRECTION_DOWN);
-                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_UP, false);
-                    hardware_command_order_light(requested_floor, HARDWARE_ORDER_DOWN, false);
+                    if(requested_direction == DIRECTION_UP) 
+                    {
+                        queue_remove_request(requested_floor, DIRECTION_UP);
+                        hardware_command_order_light(requested_floor, HARDWARE_ORDER_UP, false);
+                    }
+                    else
+                    {
+                        queue_remove_request(requested_floor, DIRECTION_DOWN);
+                        hardware_command_order_light(requested_floor, HARDWARE_ORDER_DOWN, false);
+                    }
+                    
                     hardware_command_order_light(requested_floor, HARDWARE_ORDER_INSIDE, false);
                     
                     fsm_transition(&state_door_open);
@@ -254,7 +279,15 @@ static void state_moving(fsm_event_t event)
                 {
                     // Elevator is somewhere inbetween floors, 
                     // due to previous emergency stop
-
+                    
+                    if(fsm.position == POSITION_ABOVE)
+                    {
+                        elevator_go_down();
+                    }
+                    else
+                    {
+                        elevator_go_up();
+                    }
                 }
             } 
         break;
@@ -288,7 +321,20 @@ static void state_moving(fsm_event_t event)
                 // Always clear internal order
                 hardware_command_order_light(requested_floor, HARDWARE_ORDER_INSIDE, false);
 
+                fsm.position = POSITION_ON;
+
                 fsm_transition(&state_door_open);
+            }
+            else
+            {
+                if(fsm.direction == DIRECTION_UP)
+                {
+                    fsm.position = POSITION_ABOVE;
+                }
+                else
+                {
+                    fsm.position = POSITION_BELOW;
+                }
             }
 
         break;
